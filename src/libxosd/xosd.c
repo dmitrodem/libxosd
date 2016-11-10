@@ -644,6 +644,53 @@ xosd_init(const char *font, const char *colour, int timeout, xosd_pos pos,
 
 /* }}} */
 
+int update_geometry_from_xrandr(xosd *osd) {
+  Status ret;
+  int xrandr_errbase;
+  Window root;
+  RROutput output = 0;
+  XRRQueryExtension(osd->display, &osd->xrandr_evbase, &xrandr_errbase);
+  ret = XRRQueryVersion(osd->display, &osd->xrandr_major, &osd->xrandr_minor);
+  if (ret == 0)
+    return 0;
+  if ((osd->xrandr_major < RANDR_MIN_MAJOR) || (osd->xrandr_minor < RANDR_MIN_MINOR))
+    return 0;
+  
+  printf("RANDR v%i.%i\n", osd->xrandr_major, osd->xrandr_minor);
+  root = XDefaultRootWindow(osd->display);
+  XRRScreenResources *resources = XRRGetScreenResources(osd->display, root);
+
+  /* find most suitable output */
+  RROutput primary = XRRGetOutputPrimary(osd->display, root);
+  if (primary) {
+    output = primary;
+  } else {
+    /* first connected output */
+    int noutput;
+    for (noutput = 0; noutput < resources->noutput; noutput++){
+      XRROutputInfo *output_info = XRRGetOutputInfo(osd->display, resources, resources->outputs[noutput]);
+      if (output_info->connection == RR_Connected) {
+	output = resources->outputs[noutput];
+	break;
+      }
+    }
+  }
+  XRROutputInfo *output_info = XRRGetOutputInfo(osd->display, resources, output);
+  RRCrtc crtc = output_info->crtc;
+  XRRCrtcInfo *crtc_info = XRRGetCrtcInfo(osd->display, resources, crtc);
+  osd->screen_width  = crtc_info->width;
+  osd->screen_height = crtc_info->height;
+  osd->screen_xpos   = crtc_info->x;
+  XRRFreeCrtcInfo(crtc_info);
+  XRRFreeOutputInfo(output_info);
+  XRRFreeScreenResources(resources);
+  if ((osd->screen_width > 0) && (osd->screen_height > 0)){
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 /* xosd_create -- Create a new xosd "object" {{{ */
 xosd *
 xosd_create(int number_lines)
@@ -749,9 +796,12 @@ xosd_create(int number_lines)
   } else
 #endif
   {
-    osd->screen_width = XDisplayWidth(osd->display, osd->screen);
-    osd->screen_height = XDisplayHeight(osd->display, osd->screen);
-    osd->screen_xpos = 0;
+    if (!update_geometry_from_xrandr(osd)){
+      /* Fallback */
+      osd->screen_width = XDisplayWidth(osd->display, osd->screen); 
+      osd->screen_height = XDisplayHeight(osd->display, osd->screen);
+      osd->screen_xpos = 0;
+    }
   }
 #ifdef HAVE_XINERAMA
   if (screeninfo)

@@ -644,6 +644,7 @@ xosd_init(const char *font, const char *colour, int timeout, xosd_pos pos,
 
 /* }}} */
 
+#ifdef HAVE_XRANDR
 int update_geometry_from_xrandr(xosd *osd) {
   Status ret;
   int xrandr_errbase;
@@ -655,8 +656,7 @@ int update_geometry_from_xrandr(xosd *osd) {
     return 0;
   if ((osd->xrandr_major < RANDR_MIN_MAJOR) || (osd->xrandr_minor < RANDR_MIN_MINOR))
     return 0;
-  
-  printf("RANDR v%i.%i\n", osd->xrandr_major, osd->xrandr_minor);
+
   root = XDefaultRootWindow(osd->display);
   XRRScreenResources *resources = XRRGetScreenResources(osd->display, root);
 
@@ -690,6 +690,11 @@ int update_geometry_from_xrandr(xosd *osd) {
     return 0;
   }
 }
+#else /* HAVE_XRANDR */
+int update_geometry_from_xrandr(xosd *osd) {
+  return 0;
+}
+#endif /* HAVE_XRANDR */
 
 /* xosd_create -- Create a new xosd "object" {{{ */
 xosd *

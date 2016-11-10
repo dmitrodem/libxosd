@@ -29,9 +29,11 @@
 #ifdef HAVE_XINERAMA
 #  include <X11/extensions/Xinerama.h>
 #endif
+#ifdef HAVE_XRANDR
 #include <X11/extensions/Xrandr.h>
 #define RANDR_MIN_MAJOR 1
 #define RANDR_MIN_MINOR 5
+#endif
 
 #include "xosd.h"
 
@@ -147,9 +149,11 @@ struct xosd
 
   int timeout;                  /* CONF delta time */
   struct timeval timeout_start; /* DYN Absolute start of timeout */
+#ifdef HAVE_XRANDR
   int xrandr_evbase;  /* RANDR event base */
   int xrandr_major;
   int xrandr_minor;
+#endif /* HAVE_XRANDR */
 };
 
 static const int XOSD_MAX_PRINTF_BUF_SIZE=2000;

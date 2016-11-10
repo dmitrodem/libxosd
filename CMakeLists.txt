@@ -7,6 +7,7 @@ option(USE_XRANDR   "Use Xrandr extension"   ON)
 
 set(XOSD_LDFLAGS "")
 
+include(GNUInstallDirs)
 include(FindThreads REQUIRED)
 list(APPEND XOSD_LDFLAGS ${CMAKE_THREAD_LIBS_INIT})
 
@@ -40,10 +41,12 @@ target_link_libraries(osd_cat xosd)
 configure_file("xosd.pc.in" "xosd.pc" @ONLY)
 
 
-install(TARGETS xosd DESTINATION lib)
-install(TARGETS osd_cat DESTINATION bin)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/xosd.h" DESTINATION include)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/xosd.pc" DESTINATION lib/pkgconfig)
+install(TARGETS xosd DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS osd_cat DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/xosd.h" DESTINATION
+    ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/xosd.pc" DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 set(MAN_PAGES 
     "xosd_set_bar_length.3"
     "xosd_set_pos.3"
@@ -63,5 +66,6 @@ set(MAN_PAGES
     "xosd_create.3"
     "xosd_show.3")
 foreach(MAN ${MAN_PAGES})
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/${MAN}" DESTINATION man)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/${MAN}" DESTINATION
+        ${CMAKE_INSTALL_MANDIR})
 endforeach()
